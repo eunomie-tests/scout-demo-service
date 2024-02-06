@@ -93,9 +93,10 @@ jobs:
         with:
           command: compare
           image: ${{ steps.meta.outputs.tags }}
+          organization: ybtestremediation
           only-severities: critical,high
           to-env: prod
           platform: "linux/arm64"
-          exit-code: true       
+          exit-on: policy
           summary: true
 
