@@ -8,7 +8,7 @@ on:
     branches: ["main"]
 
 env:
-  IMAGE_NAME: "ybtestremediation/scout-demo-service"
+  IMAGE_NAME: "ybtestremediation/scout-demo-service-pr"
   SHA: ${{ github.event.pull_request.head.sha || github.event.after }}
   DOCKERFILE_PATH: Dockerfile
 
@@ -40,9 +40,9 @@ jobs:
             org.opencontainers.image.revision=${{ env.SHA }}
             com.docker.image.source.entrypoint=${{ env.DOCKERFILE_PATH }}
 
-      - name: Build and push Docker image on push
-        id: build-and-push
-        if: ${{ github.event_name != 'pull_request_target' }}
+      - name: Build and push Docker image on PR
+        id: build-and-push-pr
+        if: ${{ github.event_name == 'pull_request_target' }}
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -51,52 +51,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: "linux/amd64,linux/arm64"
-          sbom: true
-          provenance: true
-      
-      - name: Build and push Docker image on PR
-        id: build-and-push-pr
-        if: ${{ github.event_name == 'pull_request_target' }}
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          load: true
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: "linux/arm64"
           sbom: false
           provenance: false          
-
-      - name: Analyze for critical and high CVEs
-        id: docker-scout-cves
-        if: ${{ github.event_name != 'pull_request_target' }}
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: ${{ steps.meta.outputs.tags }}
-          sarif-file: sarif.output.json
-          platform: "linux/arm64"
-          summary: true
-      
-      #- name: Upload SARIF result
-      #  id: upload-sarif
-      #  if: ${{ github.event_name != 'pull_request_target' }}
-      #  uses: github/codeql-action/upload-sarif@v2
-      #  with:
-      #    sarif_file: sarif.output.json
-
-      - name: Compare to deployed image
-        id: docker-scout-compare
-        if: ${{ github.event_name == 'pull_request_target' }}
-        uses: docker/scout-action@main
-        with:
-          command: compare
-          image: ${{ steps.meta.outputs.tags }}
-          organization: ybtestremediation
-          only-severities: critical,high
-          to-latest: true
-          platform: "linux/arm64"
-          exit-on: policy
-          summary: true
 
