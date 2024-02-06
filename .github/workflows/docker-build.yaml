@@ -60,8 +60,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          load: false
-          push: true
+          load: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: "linux/arm64"
@@ -86,17 +86,17 @@ jobs:
       #  with:
       #    sarif_file: sarif.output.json
 
-#      - name: Compare to deployed image
-#        id: docker-scout-compare
-#        if: ${{ github.event_name == 'pull_request_target' }}
-#        uses: docker/scout-action@main
-#        with:
-#          command: compare
-#          image: ${{ steps.meta.outputs.tags }}
-#          organization: ybtestremediation
-#          only-severities: critical,high
-#          to-env: prod
-#          platform: "linux/arm64"
-#          exit-on: policy
-#          summary: true
+      - name: Compare to deployed image
+        id: docker-scout-compare
+        if: ${{ github.event_name == 'pull_request_target' }}
+        uses: docker/scout-action@main
+        with:
+          command: compare
+          image: ${{ steps.meta.outputs.tags }}
+          organization: ybtestremediation
+          only-severities: critical,high
+          to-latest: true
+          platform: "linux/arm64"
+          exit-on: policy
+          summary: true
 
